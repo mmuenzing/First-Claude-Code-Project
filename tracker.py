@@ -4,7 +4,7 @@ from data import (
     add_goal, update_goal, delete_goal,
 )
 
-st.set_page_config(page_title="Ace Hardware — AI Resolution Tracker", layout="wide", page_icon="🔴")
+st.set_page_config(page_title="MentorMike — AI Resolution Tracker", layout="wide", page_icon="🔴")
 
 st.markdown("""
 <style>
@@ -45,17 +45,16 @@ st.markdown("""
         transition: color 0.2s ease !important;
     }
 
-    /* ── Text white on dark bg — targeted, not div-wide ── */
+    /* ── Text white on dark bg — specific containers only ── */
     .stApp p,
-    .stApp span,
     .stApp label,
     .stApp li,
     .stApp td,
     .stApp th,
-    [data-testid="stMarkdownContainer"] *,
-    [data-testid="stText"] *,
-    [data-testid="stCaptionContainer"] *,
-    [data-testid="stWidgetLabel"] label {
+    [data-testid="stMarkdownContainer"] p,
+    [data-testid="stMarkdownContainer"] li,
+    [data-testid="stText"] p,
+    [data-testid="stCaptionContainer"] p {
         color: rgba(255,255,255,0.88) !important;
         font-family: 'Inter', sans-serif !important;
     }
@@ -79,12 +78,19 @@ st.markdown("""
         color: white !important;
     }
 
-    /* ── Selectbox display value ── */
-    [data-baseweb="select"] [data-testid="stMarkdownContainer"] p,
-    [data-baseweb="select"] span,
-    [data-baseweb="select"] div {
+    /* ── Selectbox display value — target only the value text, not internal key spans ── */
+    [data-testid="stSelectbox"] [data-baseweb="select"] [data-testid="stMarkdownContainer"] p,
+    [data-testid="stSelectbox"] [data-baseweb="select"] input {
         color: white !important;
     }
+    /* Hide aria-hidden spans that Streamlit uses internally for keys */
+    [aria-hidden="true"] { visibility: hidden !important; }
+    /* Selected value text in the select box trigger */
+    [data-baseweb="select"] [data-value] { color: white !important; }
+    /* Prevent internal key labels from showing */
+    [data-baseweb="select"] span[style*="overflow: hidden"] { color: transparent !important; }
+    [data-baseweb="tag"] { background: rgba(204,0,0,0.3) !important; }
+    [data-baseweb="tag"] span { color: white !important; }
 
     /* ── Number input — fix internal button text ── */
     [data-testid="stNumberInput"] button {
@@ -287,7 +293,7 @@ st.sidebar.markdown("""
         box-shadow: 0 0 24px rgba(204,0,0,0.6), inset 0 1px 0 rgba(255,120,120,0.3);
         margin-bottom:12px;
     ">🔧</div>
-    <div style="font-size:1.1rem; font-weight:900; color:white; letter-spacing:2px; text-transform:uppercase;">Ace Hardware</div>
+    <div style="font-size:1.1rem; font-weight:900; color:white; letter-spacing:2px; text-transform:uppercase;">MentorMike</div>
     <div style="font-size:0.7rem; color:rgba(255,255,255,0.55); margin-top:4px; letter-spacing:1.5px; text-transform:uppercase;">AI Resolution Tracker</div>
     <div style="height:1px; background:rgba(255,255,255,0.12); margin:16px 12px 0 12px;"></div>
 </div>
@@ -321,7 +327,7 @@ if page == "Dashboard":
     c4.metric("Active Goals", active_goals)
 
     st.progress(completed / 10)
-    st.caption(f"{completed} of 10 initiatives completed — Ace Hardware 10-Week Program")
+    st.caption(f"{completed} of 10 initiatives completed — MentorMike 10-Week Program")
 
     st.subheader("All Initiatives")
     header = st.columns([1, 3, 2, 2, 2, 2])
