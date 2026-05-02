@@ -83,8 +83,8 @@ st.markdown("""
     [data-testid="stSelectbox"] [data-baseweb="select"] input {
         color: white !important;
     }
-    /* Hide aria-hidden spans that Streamlit uses internally for keys */
-    [aria-hidden="true"] { visibility: hidden !important; }
+    /* Hide aria-hidden spans that Streamlit uses internally for keys — scoped to select trigger only */
+    [data-baseweb="select"] > div [aria-hidden="true"] { visibility: hidden !important; }
     /* Selected value text in the select box trigger */
     [data-baseweb="select"] [data-value] { color: white !important; }
     /* Prevent internal key labels from showing */
