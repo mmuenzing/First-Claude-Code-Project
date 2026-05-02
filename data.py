@@ -1,18 +1,77 @@
-import json
+import os
 import uuid
-from pathlib import Path
+from supabase import create_client, Client
 
-DATA_FILE = Path("tracker_data.json")
+SUPABASE_URL = "https://wtzxkzepcorpdawaprxc.supabase.co"
+
+_sb: Client | None = None
+
+
+def _client() -> Client:
+    global _sb
+    if _sb is None:
+        _sb = create_client(SUPABASE_URL, os.environ["SUPABASE_KEY"])
+    return _sb
 
 
 def load_data() -> dict:
-    if not DATA_FILE.exists():
-        return {"initiatives": _default_initiatives(), "goals": []}
-    return json.loads(DATA_FILE.read_text())
+    sb = _client()
+    initiatives = sb.table("initiatives").select("*").order("week").execute().data
+    goals = sb.table("goals").select("*").order("priority").execute().data
+
+    if not initiatives:
+        initiatives = _default_initiatives()
+        sb.table("initiatives").insert(initiatives).execute()
+
+    return {"initiatives": initiatives, "goals": goals}
 
 
 def save_data(data: dict) -> None:
-    DATA_FILE.write_text(json.dumps(data, indent=2))
+    pass  # each mutation function writes directly to Supabase
+
+
+def update_initiative(data: dict, initiative_id: str, **kwargs) -> dict:
+    _client().table("initiatives").update(kwargs).eq("id", initiative_id).execute()
+    for item in data["initiatives"]:
+        if item["id"] == initiative_id:
+            item.update(kwargs)
+            break
+    return data
+
+
+def add_goal(data: dict, title: str, description: str, priority: int) -> dict:
+    goal = {
+        "id": str(uuid.uuid4()),
+        "title": title,
+        "description": description,
+        "priority": priority,
+        "status": "active",
+    }
+    _client().table("goals").insert(goal).execute()
+    data["goals"].append(goal)
+    return data
+
+
+def update_goal(data: dict, goal_id: str, **kwargs) -> dict:
+    _client().table("goals").update(kwargs).eq("id", goal_id).execute()
+    for goal in data["goals"]:
+        if goal["id"] == goal_id:
+            goal.update(kwargs)
+            break
+    return data
+
+
+def delete_goal(data: dict, goal_id: str) -> dict:
+    _client().table("goals").delete().eq("id", goal_id).execute()
+    data["goals"] = [g for g in data["goals"] if g["id"] != goal_id]
+    return data
+
+
+def get_initiative_by_id(data: dict, initiative_id: str) -> dict | None:
+    for item in data["initiatives"]:
+        if item["id"] == initiative_id:
+            return item
+    return None
 
 
 def _default_initiatives() -> list:
@@ -29,42 +88,3 @@ def _default_initiatives() -> list:
         }
         for i in range(1, 11)
     ]
-
-
-def update_initiative(data: dict, initiative_id: str, **kwargs) -> dict:
-    for item in data["initiatives"]:
-        if item["id"] == initiative_id:
-            item.update(kwargs)
-            break
-    return data
-
-
-def add_goal(data: dict, title: str, description: str, priority: int) -> dict:
-    data["goals"].append({
-        "id": str(uuid.uuid4()),
-        "title": title,
-        "description": description,
-        "priority": priority,
-        "status": "active",
-    })
-    return data
-
-
-def update_goal(data: dict, goal_id: str, **kwargs) -> dict:
-    for goal in data["goals"]:
-        if goal["id"] == goal_id:
-            goal.update(kwargs)
-            break
-    return data
-
-
-def delete_goal(data: dict, goal_id: str) -> dict:
-    data["goals"] = [g for g in data["goals"] if g["id"] != goal_id]
-    return data
-
-
-def get_initiative_by_id(data: dict, initiative_id: str) -> dict | None:
-    for item in data["initiatives"]:
-        if item["id"] == initiative_id:
-            return item
-    return None
