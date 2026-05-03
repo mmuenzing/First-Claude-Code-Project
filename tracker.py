@@ -59,7 +59,16 @@ st.markdown("""
         font-family: 'Inter', sans-serif !important;
     }
 
-    /* ── Dropdown menus — dark glass so white text is readable ── */
+    /* ── Selectbox trigger ── */
+    [data-testid="stSelectbox"] > div > div,
+    [data-baseweb="select"] > div {
+        background: rgba(15, 0, 0, 0.80) !important;
+        border: 1px solid rgba(255,255,255,0.2) !important;
+        border-radius: 10px !important;
+        color: white !important;
+    }
+
+    /* ── Dropdown popover ── */
     [data-baseweb="popover"],
     [data-baseweb="menu"],
     [role="listbox"] {
@@ -68,27 +77,20 @@ st.markdown("""
         border-radius: 10px !important;
         box-shadow: 0 8px 32px rgba(0,0,0,0.6) !important;
     }
-    [role="option"], li[role="option"] {
-        background: transparent !important;
+
+    /* ── Dropdown options ── */
+    [role="option"],
+    [role="option"] * {
         color: rgba(255,255,255,0.88) !important;
+        background: transparent !important;
+        visibility: visible !important;
     }
-    [role="option"]:hover, li[role="option"]:hover,
+    [role="option"]:hover,
     [aria-selected="true"][role="option"] {
         background: rgba(204,0,0,0.25) !important;
         color: white !important;
     }
 
-    /* ── Selectbox display value — target only the value text, not internal key spans ── */
-    [data-testid="stSelectbox"] [data-baseweb="select"] [data-testid="stMarkdownContainer"] p,
-    [data-testid="stSelectbox"] [data-baseweb="select"] input {
-        color: white !important;
-    }
-    /* Hide aria-hidden spans that Streamlit uses internally for keys — scoped to select trigger only */
-    [data-baseweb="select"] > div [aria-hidden="true"] { visibility: hidden !important; }
-    /* Selected value text in the select box trigger */
-    [data-baseweb="select"] [data-value] { color: white !important; }
-    /* Prevent internal key labels from showing */
-    [data-baseweb="select"] span[style*="overflow: hidden"] { color: transparent !important; }
     [data-baseweb="tag"] { background: rgba(204,0,0,0.3) !important; }
     [data-baseweb="tag"] span { color: white !important; }
 
@@ -216,19 +218,6 @@ st.markdown("""
         color: rgba(255,255,255,0.35) !important;
     }
 
-    /* ── Selectbox — dark bg, white selected value ── */
-    [data-testid="stSelectbox"] > div > div,
-    [data-baseweb="select"] > div {
-        background: rgba(15, 0, 0, 0.80) !important;
-        border: 1px solid rgba(255,255,255,0.2) !important;
-        border-radius: 10px !important;
-        color: white !important;
-    }
-    [data-testid="stSelectbox"] span,
-    [data-testid="stSelectbox"] div[data-testid="stMarkdownContainer"] p,
-    [data-baseweb="select"] span {
-        color: #ffffff !important;
-    }
 
     /* ── Number input stepper container ── */
     [data-testid="stNumberInput"] > div {
@@ -302,7 +291,7 @@ st.sidebar.markdown("""
 page = st.sidebar.radio("", ["Dashboard", "Initiatives", "Goals"])
 
 STATUS_OPTIONS = ["not_started", "in_progress", "completed"]
-STATUS_LABELS = {"not_started": "Not Started", "in_progress": "In Progress", "completed": "Completed"}
+STATUS_LABELS = {"not_started": "Not Started", "in_progress": "In Progress", "completed": "Complete"}
 STATUS_ICONS = {"not_started": "⬜", "in_progress": "🔵", "completed": "✅"}
 PRIORITY_LABELS = {1: "1 — Critical", 2: "2 — High", 3: "3 — Medium", 4: "4 — Low", 5: "5 — Optional"}
 
@@ -352,11 +341,13 @@ elif page == "Initiatives":
         with st.expander(label, expanded=init["status"] == "in_progress"):
             with st.form(key=f"init_{init['id']}"):
                 title = st.text_input("Title", value=init["title"])
-                status = st.selectbox(
+                status = st.radio(
                     "Status",
                     STATUS_OPTIONS,
                     index=STATUS_OPTIONS.index(init["status"]),
                     format_func=lambda s: STATUS_LABELS[s],
+                    horizontal=True,
+                    key=f"status_{init['id']}",
                 )
                 col1, col2 = st.columns(2)
                 start_date = col1.text_input("Date Started (YYYY-MM-DD)", value=init["start_date"])
